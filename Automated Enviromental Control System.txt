@@ -1,0 +1,65 @@
+#include <LiquidCrystal.h>
+//Sondos Kullab cooling and heating system 
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// variable are defined below	
+int TempSensor = 1; //tempreture sensor connected to A1, pin 1
+int LedB=8; // Blue LED light connected to pin 8
+int readtemp; //Variable that reads the temp value 
+float vol; // voltage variable
+float tempC; //temp in C degrees
+int LedR=7; // Red LED light 
+const int POT=0; // potentionmeter pin 0 
+int valDC=0; // varaible for storing th analog read 
+const int DCmotor = 9; // motor pin, pin 9 defined 
+
+
+void setup() // setting up the arduino 
+{
+  Serial.begin(9600); 
+  //pin modes for the following are outputs
+  pinMode(LedB, OUTPUT);
+  pinMode(LedR, OUTPUT);
+  pinMode(DCmotor,OUTPUT);
+  
+}
+
+
+void loop()                     
+{
+ readtemp = analogRead(TempSensor); // reads the analog volt value from temp sensor and store that readtemp 
+//calculation to conveirt the analog value to match the temp value 
+ vol = readtemp * 5.0;
+ vol /= 1024.0; 
+ tempC = (vol - 0.5) * 100 ;  // temp in celcius degrees 
+
+  
+ lcd.clear();// clearing out the lcd
+  
+ lcd.print(tempC);// print the value of the temp on the lcd monitor 
+ lcd.print(" Degrees C"); // printing the units of the temp value 
+  delay (1000); // delay 1 second 
+  
+  valDC=analogRead(POT); // reads the analog value and stores it to ValDC variable 
+  valDC=map(valDC,0,1023,0,255); // here, it is re-mapping the voltage from pin 0 and directs it to a variable called valDC. One range to another
+  analogWrite(DCmotor, valDC); // dcmotor pin, with a set value of ValDc which was the value that was re-maped 
+ 
+  //the following code are the "if" conditions for the different requirements:
+  
+  if (tempC>28) { // if temp was greater than 28 degrees c, 
+   digitalWrite(LedB, HIGH); // the blue LED will turn on 
+   digitalWrite(LedR, LOW); // the red LED will turn off
+   digitalWrite(DCmotor, valDC); } // the fan will be On still 
+
+  if (tempC<20){ // if temp wsa less than 20 degrees c
+     digitalWrite(LedB, LOW); // Blue LED will be turned off
+   digitalWrite(LedR, HIGH); // the red LED is at high, which means its on 
+    digitalWrite(DCmotor, valDC);} // fan of the motor is on 
+  
+  //it will stop cooling and heating, and the fan will stop after few seconds due to the loop finishing the cycle(allow few seconds)
+  if ((tempC>20) && (tempC <28)) { // if temp value is between 20 (lower limit) and 28 (upper limit then preform the following based on requairemnets
+    digitalWrite(LedB, LOW); // turn off blue LED 
+   digitalWrite(LedR, LOW); // turn off Red Led 
+    digitalWrite(DCmotor, LOW); } // Turn of the DC motor 
+  
+}
